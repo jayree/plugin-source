@@ -24,6 +24,7 @@ export type ComponentSetOptions = {
   metadata?: MetadataOption;
   apiversion?: string;
   sourceapiversion?: string;
+  targetUsername?: string;
 };
 
 export class ComponentSetBuilder {
@@ -39,7 +40,7 @@ export class ComponentSetBuilder {
     const logger = Logger.childFromRoot('createComponentSet');
     let componentSet: ComponentSet;
 
-    const { sourcepath, manifest, metadata, packagenames, apiversion, sourceapiversion } = options;
+    const { sourcepath, manifest, metadata, packagenames, apiversion, sourceapiversion, targetUsername } = options;
     try {
       if (sourcepath) {
         logger.debug(`Building ComponentSet from sourcepath: ${sourcepath.toString()}`);
@@ -100,6 +101,12 @@ export class ComponentSetBuilder {
         for (const comp of resolvedComponents) {
           componentSet.add(comp);
         }
+      }
+
+      // Resolve metadata entries with targetUsername
+      if (targetUsername) {
+        logger.debug(`Building ComponentSet from targetUsername: ${targetUsername}`);
+        componentSet = await ComponentSet.fromTargetUsername(targetUsername);
       }
     } catch (e) {
       if ((e as Error).message.includes('Missing metadata type definition in registry for id')) {

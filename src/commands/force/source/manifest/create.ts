@@ -31,6 +31,7 @@ export class create extends SourceCommand {
   public static readonly description = messages.getMessage('description');
   public static readonly examples = messages.getMessage('examples').split(os.EOL);
   public static readonly requiresProject = true;
+  public static readonly supportsUsername = true;
   public static readonly flagsConfig: FlagsConfig = {
     apiversion: flags.builtin({}),
     metadata: flags.array({
@@ -58,7 +59,7 @@ export class create extends SourceCommand {
       description: messages.getMessage('flags.outputdir'),
     }),
   };
-  protected xorFlags = ['metadata', 'sourcepath'];
+  protected xorFlags = ['metadata', 'sourcepath', 'targetusername'];
   private manifestName: string;
   private outputDir: string;
   private outputPath: string;
@@ -85,6 +86,7 @@ export class create extends SourceCommand {
         metadataEntries: this.getFlag<string[]>('metadata'),
         directoryPaths: this.getPackageDirs(),
       },
+      targetUsername: this.org.getConnection().getUsername(),
     });
 
     // add the .xml suffix if the user just provided a file name
