@@ -7,7 +7,7 @@
 
 import * as path from 'path';
 import { ComponentSet, RegistryAccess } from '@salesforce/source-deploy-retrieve';
-import { fs, SfdxError, Logger } from '@salesforce/core';
+import { fs, SfdxError, Logger, Connection } from '@salesforce/core';
 
 export type ManifestOption = {
   manifestPath: string;
@@ -24,7 +24,7 @@ export type ComponentSetOptions = {
   metadata?: MetadataOption;
   apiversion?: string;
   sourceapiversion?: string;
-  targetUsername?: string;
+  connection?: Connection;
 };
 
 export class ComponentSetBuilder {
@@ -40,7 +40,7 @@ export class ComponentSetBuilder {
     const logger = Logger.childFromRoot('createComponentSet');
     let componentSet: ComponentSet;
 
-    const { sourcepath, manifest, metadata, packagenames, apiversion, sourceapiversion, targetUsername } = options;
+    const { sourcepath, manifest, metadata, packagenames, apiversion, sourceapiversion, connection } = options;
     try {
       if (sourcepath) {
         logger.debug(`Building ComponentSet from sourcepath: ${sourcepath.toString()}`);
@@ -103,10 +103,10 @@ export class ComponentSetBuilder {
         }
       }
 
-      // Resolve metadata entries with targetUsername
-      if (targetUsername) {
-        logger.debug(`Building ComponentSet from targetUsername: ${targetUsername}`);
-        componentSet = await ComponentSet.fromTargetUsername(targetUsername);
+      // Resolve metadata entries with an org connection
+      if (connection) {
+        logger.debug(`Building ComponentSet from targetUsername: ${connection.getUsername()}`);
+        componentSet = await ComponentSet.fromConnection(connection);
       }
     } catch (e) {
       if ((e as Error).message.includes('Missing metadata type definition in registry for id')) {

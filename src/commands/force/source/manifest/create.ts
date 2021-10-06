@@ -86,7 +86,7 @@ export class create extends SourceCommand {
         metadataEntries: this.getFlag<string[]>('metadata'),
         directoryPaths: this.getPackageDirs(),
       },
-      targetUsername: this.org.getConnection().getUsername(),
+      connection: this.org.getConnection(),
     });
 
     // add the .xml suffix if the user just provided a file name
