@@ -1,62 +1,66 @@
 {
   "name": "@salesforce/plugin-source",
   "description": "Commands to interact with source formatted metadata",
-  "version": "1.2.1",
+  "version": "1.8.9",
   "author": "Salesforce",
   "bugs": "https://github.com/forcedotcom/cli/issues",
   "dependencies": {
-    "@oclif/config": "^1",
-    "@salesforce/command": "^4.1.3",
-    "@salesforce/core": "^2.28.0",
-    "@salesforce/source-deploy-retrieve": "^4.5.2",
+    "@oclif/config": "^1.18.2",
+    "@salesforce/command": "^4.2.2",
+    "@salesforce/core": "^2.35.0",
+    "@salesforce/source-deploy-retrieve": "^5.9.5",
+    "@salesforce/source-tracking": "^1.0.2",
     "chalk": "^4.1.2",
     "cli-ux": "^5.6.3",
-    "open": "^8.2.1",
+    "open": "^8.4.0",
     "tslib": "^2"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1",
-    "@oclif/plugin-command-snapshot": "^2.2.2",
-    "@salesforce/cli-plugins-testkit": "^1.4.10",
-    "@salesforce/dev-config": "^2.1.2",
-    "@salesforce/dev-scripts": "^0.9.18",
-    "@salesforce/plugin-command-reference": "^1.3.4",
+    "@oclif/plugin-command-snapshot": "^3.1.2",
+    "@salesforce/cli-plugins-testkit": "^1.5.3",
+    "@salesforce/dev-config": "^3.0.0",
+    "@salesforce/dev-scripts": "^2.0.0",
+    "@salesforce/plugin-command-reference": "^1.3.18",
     "@salesforce/plugin-config": "^1.2.39",
-    "@salesforce/plugin-user": "^1.4.0",
+    "@salesforce/plugin-user": "^1.7.0",
     "@salesforce/prettier-config": "^0.0.2",
-    "@salesforce/source-testkit": "^0.0.15",
+    "@salesforce/source-testkit": "^0.0.16",
     "@salesforce/ts-sinon": "1.3.21",
+    "@types/archiver": "^5.1.1",
     "@types/debug": "^4.1.7",
-    "@types/jsforce": "^1.9.35",
-    "@types/shelljs": "^0.8.9",
+    "@types/jsforce": "^1.9.39",
+    "@types/shelljs": "^0.8.11",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
+    "archiver": "^5.3.0",
     "chai": "^4.3.4",
     "chai-each": "^0.0.1",
+    "cross-env": "^7.0.3",
     "cz-conventional-changelog": "^3.3.0",
-    "debug": "^4.3.2",
+    "debug": "^4.3.3",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-config-salesforce": "^0.1.6",
     "eslint-config-salesforce-license": "^0.1.6",
     "eslint-config-salesforce-typescript": "^0.2.8",
     "eslint-plugin-header": "^3.1.1",
-    "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-jsdoc": "^35.1.3",
     "eslint-plugin-prettier": "^4.0.0",
     "fast-glob": "^3.2.7",
-    "husky": "^4.3.8",
-    "lint-staged": "^11.2.0",
-    "mocha": "^8.4.0",
+    "husky": "^7.0.4",
+    "lint-staged": "^12.3.2",
+    "mocha": "^9.1.3",
     "nyc": "^15.1.0",
-    "prettier": "^2.4.1",
-    "pretty-quick": "^3.1.1",
+    "prettier": "^2.5.1",
+    "pretty-quick": "^3.1.3",
     "salesforcedx-templates": "^49.8.0",
-    "shelljs": "^0.8.4",
+    "shelljs": "^0.8.5",
     "shx": "0.3.3",
     "sinon": "10.0.0",
-    "ts-node": "^10.2.1",
-    "typescript": "^4.1.3"
+    "ts-node": "^10.4.0",
+    "typescript": "^4.4.4"
   },
   "config": {
     "commitizen": {
@@ -103,6 +107,30 @@
               },
               "manifest": {
                 "description": "create a manifest to use in a deploy/retrieve"
+              },
+              "beta": {
+                "description": "new versions of source tracking commands",
+                "subtopics": {
+                  "tracking": {
+                    "description": "new versions of source tracking commands"
+                  }
+                }
+              }
+            }
+          },
+          "mdapi": {
+            "description": "retrieve and deploy metadata using Metadata API",
+            "subtopics": {
+              "beta": {
+                "description": "new versions of mdapi commands",
+                "subtopics": {
+                  "deploy": {
+                    "description": "new versions of deploy report command"
+                  },
+                  "retrieve": {
+                    "description": "new versions of retrieve report command"
+                  }
+                }
               }
             }
           }
@@ -129,21 +157,33 @@
     "test:command-reference": "./bin/run commandreference:generate --erroronwarnings",
     "test:deprecation-policy": "./bin/run snapshot:compare",
     "test:nuts": "ts-node ./test/nuts/generateNuts.ts && nyc mocha \"**/*.nut.ts\"  --slow 4500 --timeout 600000 --parallel --retries 0",
-    "test:nuts:convert": "PLUGIN_SOURCE_SEED_FILTER=\"convert\" ts-node ./test/nuts/generateNuts.ts && nyc mocha \"**/*.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
-    "test:nuts:delete": "nyc mocha \"test/nuts/delete.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
-    "test:nuts:deploy": "PLUGIN_SOURCE_SEED_FILTER=\"deploy\" ts-node ./test/nuts/generateNuts.ts && nyc mocha \"**/*.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
-    "test:nuts:folders": "nyc mocha \"test/nuts/folderTypes.nut.ts\" --slow 4500 --timeout 600000",
-    "test:nuts:manifest:create": "nyc mocha \"test/nuts/create.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
-    "test:nuts:retrieve": "PLUGIN_SOURCE_SEED_FILTER=\"retrieve\" ts-node ./test/nuts/generateNuts.ts && nyc mocha \"**/*.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
-    "test:nuts:territory2": "nyc mocha \"test/nuts/territory2.nut.ts\" --slow 4500 --timeout 600000 --retries 0",
+    "test:nuts:commands:other": "mocha \"test/nuts/open.nut.ts\" \"test/nuts/ignored_list.nut.ts\" --slow 4500 --timeout 600000 --retries 0 --parallel",
+    "test:nuts:convert": "cross-env PLUGIN_SOURCE_SEED_FILTER=convert ts-node ./test/nuts/generateNuts.ts && mocha \"test/nuts/generated/*.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
+    "test:nuts:delete": "mocha \"test/nuts/delete.nut.ts\" --slow 4500 --timeout 600000 --retries 0",
+    "test:nuts:deploy": "cross-env PLUGIN_SOURCE_SEED_FILTER=deploy PLUGIN_SOURCE_SEED_EXCLUDE=async ts-node ./test/nuts/generateNuts.ts && mocha \"test/nuts/generated/*.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
+    "test:nuts:deploy:async": "cross-env PLUGIN_SOURCE_SEED_FILTER=deploy.async ts-node ./test/nuts/generateNuts.ts && mocha \"test/nuts/generated/*.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
+    "test:nuts:deploy:destructive": "mocha \"test/nuts/deployDestructive.nut.ts\" --slow 3000 --timeout 600000 --retries 0",
+    "test:nuts:deploy:manifest": "cross-env PLUGIN_SOURCE_SEED_FILTER=deploy.manifest ts-node ./test/nuts/generateNuts.ts && mocha \"test/nuts/generated/*.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
+    "test:nuts:deploy:metadata": "cross-env PLUGIN_SOURCE_SEED_FILTER=deploy.metadata ts-node ./test/nuts/generateNuts.ts && mocha \"test/nuts/generated/*.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
+    "test:nuts:deploy:quick": "cross-env PLUGIN_SOURCE_SEED_FILTER=deploy.quick ts-node ./test/nuts/generateNuts.ts && mocha \"test/nuts/generated/*.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
+    "test:nuts:deploy:sourcepath": "cross-env PLUGIN_SOURCE_SEED_FILTER=deploy.sourcepath ts-node ./test/nuts/generateNuts.ts && mocha \"test/nuts/generated/*.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
+    "test:nuts:deploy:testlevel": "cross-env PLUGIN_SOURCE_SEED_FILTER=deploy.testlevel ts-node ./test/nuts/generateNuts.ts && mocha \"test/nuts/generated/*.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
+    "test:nuts:folders": "mocha \"test/nuts/folderTypes.nut.ts\" --slow 4500 --timeout 600000",
+    "test:nuts:manifest:create": "mocha \"test/nuts/create.nut.ts\" --slow 4500 --timeout 600000 --retries 0",
+    "test:nuts:mdapi": "mocha \"test/nuts/mdapi.nut.ts\" --slow 3000 --timeout 600000 --retries 0",
+    "test:nuts:retrieve": "cross-env PLUGIN_SOURCE_SEED_FILTER=retrieve ts-node ./test/nuts/generateNuts.ts && mocha \"test/nuts/generated/*.nut.ts\" --slow 4500 --timeout 600000 --parallel --retries 0",
+    "test:nuts:specialTypes": "mocha \"test/nuts/territory2.nut.ts\" \"test/nuts/folderTypes.nut.ts\" \"test/nuts/translation.nut.ts\" --slow 4500 --timeout 600000 --retries 0 --parallel",
+    "test:nuts:territory2": "mocha \"test/nuts/territory2.nut.ts\" --slow 4500 --timeout 600000 --retries 0",
+    "test:nuts:tracking": "mocha \"test/nuts/trackingCommands/*.nut.ts\" --slow 3000 --timeout 600000 --parallel --retries 0",
+    "test:nuts:tracking:basics": "mocha \"test/nuts/trackingCommands/basics.nut.ts\" --slow 3000 --timeout 600000 --retries 0",
+    "test:nuts:tracking:conflicts": "mocha \"test/nuts/trackingCommands/conflicts.nut.ts\" --slow 3000 --timeout 600000 --retries 0",
+    "test:nuts:tracking:forceignore": "mocha \"test/nuts/trackingCommands/forceIgnore.nut.ts\" --slow 3000 --timeout 600000 --retries 0",
+    "test:nuts:tracking:lwc": "mocha \"test/nuts/trackingCommands/lwc.nut.ts\" --slow 3000 --timeout 600000 --retries 0",
+    "test:nuts:tracking:remote": "mocha \"test/nuts/trackingCommands/remoteChanges.nut.ts\" --slow 3000 --timeout 600000 --retries 0",
+    "test:nuts:tracking:resetClear": "mocha \"test/nuts/trackingCommands/resetClear.nut.ts\" --slow 3000 --timeout 600000 --retries 0",
+    "test:nuts:translations": "mocha \"test/nuts/translation.nut.ts\" --slow 4500 --timeout 600000 --retries 0",
+    "test:watch": "mocha --watch \"./test/**/*.test.ts\"",
     "version": "oclif-dev readme"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "sf-husky-pre-commit",
-      "commit-msg": "sf-husky-commit-msg",
-      "pre-push": "sf-husky-pre-push"
-    }
   },
   "publishConfig": {
     "access": "public"

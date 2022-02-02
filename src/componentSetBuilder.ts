@@ -12,6 +12,8 @@ import { fs, SfdxError, Logger, Connection } from '@salesforce/core';
 export type ManifestOption = {
   manifestPath: string;
   directoryPaths: string[];
+  destructiveChangesPre?: string;
+  destructiveChangesPost?: string;
 };
 export type MetadataOption = {
   metadataEntries: string[];
@@ -21,6 +23,7 @@ export type ComponentSetOptions = {
   packagenames?: string[];
   sourcepath?: string[];
   manifest?: ManifestOption;
+
   metadata?: MetadataOption;
   apiversion?: string;
   sourceapiversion?: string;
@@ -69,6 +72,8 @@ export class ComponentSetBuilder {
           manifestPath: manifest.manifestPath,
           resolveSourcePaths: options.manifest.directoryPaths,
           forceAddWildcards: true,
+          destructivePre: options.manifest.destructiveChangesPre,
+          destructivePost: options.manifest.destructiveChangesPost,
         });
       }
 

@@ -10,18 +10,18 @@ import { join } from 'path';
 import { flags, FlagsConfig } from '@salesforce/command';
 import { Messages, SfdxProject } from '@salesforce/core';
 import { Duration } from '@salesforce/kit';
-import { getString } from '@salesforce/ts-types';
-import { RetrieveResult, RequestStatus, ComponentSet } from '@salesforce/source-deploy-retrieve';
+import { ComponentSet, RequestStatus, RetrieveResult } from '@salesforce/source-deploy-retrieve';
 import { SourceCommand } from '../../../sourceCommand';
 import {
-  RetrieveResultFormatter,
-  RetrieveCommandResult,
   PackageRetrieval,
+  RetrieveCommandResult,
+  RetrieveResultFormatter,
 } from '../../../formatters/retrieveResultFormatter';
 import { ComponentSetBuilder } from '../../../componentSetBuilder';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-source', 'retrieve');
+const spinnerMessages = Messages.loadMessages('@salesforce/plugin-source', 'spinner');
 
 export class Retrieve extends SourceCommand {
   public static readonly description = messages.getMessage('description');
@@ -42,7 +42,7 @@ export class Retrieve extends SourceCommand {
     }),
     wait: flags.minutes({
       char: 'w',
-      default: Duration.minutes(SourceCommand.DEFAULT_SRC_WAIT_MINUTES),
+      default: Duration.minutes(SourceCommand.DEFAULT_WAIT_MINUTES),
       min: Duration.minutes(1),
       description: messages.getMessage('flags.wait'),
       longDescription: messages.getMessage('flagsLong.wait'),
@@ -77,6 +77,7 @@ export class Retrieve extends SourceCommand {
   }
 
   protected async retrieve(): Promise<void> {
+    this.ux.startSpinner(spinnerMessages.getMessage('retrieve.componentSetBuild'));
     this.componentSet = await ComponentSetBuilder.build({
       apiversion: this.getFlag<string>('apiversion'),
       sourceapiversion: await this.getSourceApiVersion(),
@@ -101,6 +102,11 @@ export class Retrieve extends SourceCommand {
 
     await this.lifecycle.emit('preretrieve', this.componentSet.toArray());
 
+    this.ux.setSpinnerStatus(
+      spinnerMessages.getMessage('retrieve.sendingRequest', [
+        this.componentSet.sourceApiVersion || this.componentSet.apiVersion,
+      ])
+    );
     const mdapiRetrieve = await this.componentSet.retrieve({
       usernameOrConnection: this.org.getUsername(),
       merge: true,
@@ -108,16 +114,24 @@ export class Retrieve extends SourceCommand {
       packageOptions: this.getFlag<string[]>('packagenames'),
     });
 
-    this.retrieveResult = await mdapiRetrieve.pollStatus(1000, this.getFlag<Duration>('wait').seconds);
+    this.ux.setSpinnerStatus(spinnerMessages.getMessage('retrieve.polling'));
+    this.retrieveResult = await mdapiRetrieve.pollStatus({ timeout: this.getFlag<Duration>('wait') });
 
     await this.lifecycle.emit('postretrieve', this.retrieveResult.getFileResponses());
+    this.ux.stopSpinner();
   }
 
   protected resolveSuccess(): void {
-    const status = getString(this.retrieveResult, 'response.status');
-    if (status !== RequestStatus.Succeeded) {
-      this.setExitCode(1);
-    }
+    const StatusCodeMap = new Map<RequestStatus, number>([
+      [RequestStatus.Succeeded, 0],
+      [RequestStatus.Canceled, 1],
+      [RequestStatus.Failed, 1],
+      [RequestStatus.InProgress, 69],
+      [RequestStatus.Pending, 69],
+      [RequestStatus.Canceling, 69],
+    ]);
+
+    this.setExitCode(StatusCodeMap.get(this.retrieveResult.response.status) ?? 1);
   }
 
   protected async formatResult(): Promise<RetrieveCommandResult> {

@@ -10,15 +10,15 @@ import * as sinon from 'sinon';
 import { expect } from 'chai';
 import { MetadataApiDeployOptions } from '@salesforce/source-deploy-retrieve';
 import { fromStub, stubInterface, stubMethod } from '@salesforce/ts-sinon';
-import { ConfigAggregator, Lifecycle, Org, SfdxProject, Messages } from '@salesforce/core';
+import { ConfigAggregator, Lifecycle, Messages, Org, SfdxProject } from '@salesforce/core';
 import { UX } from '@salesforce/command';
 import { IConfig } from '@oclif/config';
 import { Deploy } from '../../../src/commands/force/source/deploy';
 import { DeployCommandResult, DeployResultFormatter } from '../../../src/formatters/deployResultFormatter';
 import {
-  DeployCommandAsyncResult,
   DeployAsyncResultFormatter,
-} from '../../../src/formatters/deployAsyncResultFormatter';
+  DeployCommandAsyncResult,
+} from '../../../src/formatters/source/deployAsyncResultFormatter';
 import { ComponentSetBuilder, ComponentSetOptions } from '../../../src/componentSetBuilder';
 import { DeployProgressBarFormatter } from '../../../src/formatters/deployProgressBarFormatter';
 import { DeployProgressStatusFormatter } from '../../../src/formatters/deployProgressStatusFormatter';
@@ -26,7 +26,6 @@ import { getDeployResult } from './deployResponses';
 import { exampleSourceComponent } from './testConsts';
 
 Messages.importMessagesDirectory(__dirname);
-const messages = Messages.loadMessages('@salesforce/plugin-source', 'deploy');
 
 describe('force:source:deploy', () => {
   const sandbox = sinon.createSandbox();
@@ -73,6 +72,8 @@ describe('force:source:deploy', () => {
   class TestDeploy extends Deploy {
     public async runIt() {
       await this.init();
+      // oclif would normally populate this, but UT don't have it
+      this.id ??= 'force:source:deploy';
       return this.run();
     }
     public setOrg(org: Org) {
@@ -155,9 +156,11 @@ describe('force:source:deploy', () => {
         ignoreWarnings: false,
         rollbackOnError: true,
         checkOnly: false,
+        purgeOnDelete: false,
         runTests: [],
         testLevel: 'NoTestRun',
         rest: false,
+        ...overrides?.apiOptions,
       },
     };
     if (overrides?.apiOptions) {
@@ -180,15 +183,6 @@ describe('force:source:deploy', () => {
   const ensureProgressBar = (callCount: number) => {
     expect(initProgressBarStub.callCount).to.equal(callCount);
   };
-
-  it('should error if sourcepath or manifest arguments are not provided', async () => {
-    const requiredFlags = 'manifest, metadata, sourcepath, validateddeployrequestid';
-    try {
-      await runDeployCmd([]);
-    } catch (e) {
-      expect((e as Error).message).to.equal(messages.getMessage('MissingRequiredParam', [requiredFlags]));
-    }
-  });
 
   it('should pass along sourcepath', async () => {
     const sourcepath = ['somepath'];
@@ -223,6 +217,8 @@ describe('force:source:deploy', () => {
       manifest: {
         manifestPath: manifest,
         directoryPaths: [defaultDir],
+        destructiveChangesPost: undefined,
+        destructiveChangesPre: undefined,
       },
     });
     ensureDeployArgs();
@@ -240,6 +236,8 @@ describe('force:source:deploy', () => {
       manifest: {
         manifestPath: manifest,
         directoryPaths: [defaultDir],
+        destructiveChangesPost: undefined,
+        destructiveChangesPre: undefined,
       },
     });
     ensureDeployArgs();
@@ -258,9 +256,92 @@ describe('force:source:deploy', () => {
       manifest: {
         manifestPath: manifest,
         directoryPaths: [defaultDir],
+        destructiveChangesPost: undefined,
+        destructiveChangesPre: undefined,
       },
     });
     ensureDeployArgs();
+    ensureHookArgs();
+    ensureProgressBar(0);
+  });
+
+  it('should pass purgeOnDelete flag', async () => {
+    const manifest = 'package.xml';
+    const destructiveChanges = 'destructiveChangesPost.xml';
+    const runTests = ['MyClassTest'];
+    const testLevel = 'RunSpecifiedTests';
+    const result = await runDeployCmd([
+      `--manifest=${manifest}`,
+      `--postdestructivechanges=${destructiveChanges}`,
+      '--ignorewarnings',
+      '--ignoreerrors',
+      '--checkonly',
+      `--runtests=${runTests[0]}`,
+      `--testlevel=${testLevel}`,
+      '--purgeondelete',
+      '--json',
+    ]);
+
+    expect(result).to.deep.equal(expectedResults);
+    ensureDeployArgs({
+      apiOptions: {
+        checkOnly: true,
+        ignoreWarnings: true,
+        purgeOnDelete: true,
+        rest: false,
+        rollbackOnError: false,
+        runTests: ['MyClassTest'],
+        testLevel: 'RunSpecifiedTests',
+      },
+    });
+    ensureCreateComponentSetArgs({
+      manifest: {
+        manifestPath: manifest,
+        directoryPaths: [defaultDir],
+        destructiveChangesPost: destructiveChanges,
+        destructiveChangesPre: undefined,
+      },
+    });
+    ensureHookArgs();
+    ensureProgressBar(0);
+  });
+
+  it('should pass default purgeondelete flag to false', async () => {
+    const manifest = 'package.xml';
+    const destructiveChanges = 'destructiveChangesPost.xml';
+    const runTests = ['MyClassTest'];
+    const testLevel = 'RunSpecifiedTests';
+    const result = await runDeployCmd([
+      `--manifest=${manifest}`,
+      `--postdestructivechanges=${destructiveChanges}`,
+      '--ignorewarnings',
+      '--ignoreerrors',
+      '--checkonly',
+      `--runtests=${runTests[0]}`,
+      `--testlevel=${testLevel}`,
+      '--json',
+    ]);
+
+    expect(result).to.deep.equal(expectedResults);
+    ensureDeployArgs({
+      apiOptions: {
+        checkOnly: true,
+        ignoreWarnings: true,
+        purgeOnDelete: false,
+        rest: false,
+        rollbackOnError: false,
+        runTests: ['MyClassTest'],
+        testLevel: 'RunSpecifiedTests',
+      },
+    });
+    ensureCreateComponentSetArgs({
+      manifest: {
+        manifestPath: manifest,
+        directoryPaths: [defaultDir],
+        destructiveChangesPost: destructiveChanges,
+        destructiveChangesPre: undefined,
+      },
+    });
     ensureHookArgs();
     ensureProgressBar(0);
   });
@@ -284,6 +365,8 @@ describe('force:source:deploy', () => {
       manifest: {
         manifestPath: manifest,
         directoryPaths: [defaultDir],
+        destructiveChangesPost: undefined,
+        destructiveChangesPre: undefined,
       },
     });
 
@@ -434,14 +517,6 @@ describe('force:source:deploy', () => {
       ensureHookArgs();
       ensureProgressBar(0);
     });
-
-    it('should start the progress bar only once with data onUpdate');
-    it('should display the deploy ID only once onUpdate');
-    it('should update progress bar with data onUpdate');
-    it('should setTotal on the progress bar with data onUpdate');
-    it('should update and stop progress bar with data onFinish');
-    it('should stop progress bar onCancel');
-    it('should stop progress bar onError');
   });
 
   it('should return JSON format and not display for a synchronous deploy', async () => {

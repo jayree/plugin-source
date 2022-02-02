@@ -7,9 +7,8 @@
 
 import * as os from 'os';
 import { flags, FlagsConfig } from '@salesforce/command';
-import { Messages } from '@salesforce/core';
+import { Messages, SfdxError } from '@salesforce/core';
 import { Duration } from '@salesforce/kit';
-import { getString } from '@salesforce/ts-types';
 import { RequestStatus } from '@salesforce/source-deploy-retrieve';
 import { DeployCommand } from '../../../../deployCommand';
 import {
@@ -27,7 +26,7 @@ export class Cancel extends DeployCommand {
   public static readonly flagsConfig: FlagsConfig = {
     wait: flags.minutes({
       char: 'w',
-      default: Duration.minutes(DeployCommand.DEFAULT_SRC_WAIT_MINUTES),
+      default: Duration.minutes(DeployCommand.DEFAULT_WAIT_MINUTES),
       min: Duration.minutes(1),
       description: messages.getMessage('flags.wait'),
       longDescription: messages.getMessage('flagsLong.wait'),
@@ -35,6 +34,7 @@ export class Cancel extends DeployCommand {
     jobid: flags.id({
       char: 'i',
       description: messages.getMessage('flags.jobid'),
+      validate: DeployCommand.isValidDeployId,
     }),
   };
 
@@ -46,18 +46,19 @@ export class Cancel extends DeployCommand {
 
   protected async cancel(): Promise<void> {
     const deployId = this.resolveDeployId(this.getFlag<string>('jobid'));
+    try {
+      const deploy = this.createDeploy(deployId);
+      await deploy.cancel();
 
-    // TODO: update to use SDRL. This matches the toolbelt implementation.
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-assignment
-    await this.org.getConnection().metadata['_invoke']('cancelDeploy', {
-      deployId,
-    });
-
-    this.deployResult = await this.poll(deployId);
+      this.deployResult = await this.poll(deployId);
+    } catch (e) {
+      const err = e as Error;
+      throw SfdxError.create('@salesforce/plugin-source', 'cancel', 'CancelFailed', [err.message]);
+    }
   }
 
   protected resolveSuccess(): void {
-    const status = getString(this.deployResult, 'response.status');
+    const status = this.deployResult.response.status;
     if (status !== RequestStatus.Canceled) {
       this.setExitCode(1);
     }

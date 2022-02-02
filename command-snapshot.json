@@ -1,5 +1,114 @@
 [
   {
+    "command": "force:mdapi:beta:convert",
+    "plugin": "@salesforce/plugin-source",
+    "flags": ["json", "loglevel", "manifest", "metadata", "metadatapath", "outputdir", "rootdir"]
+  },
+  {
+    "command": "force:mdapi:beta:deploy",
+    "plugin": "@salesforce/plugin-source",
+    "flags": [
+      "apiversion",
+      "checkonly",
+      "concise",
+      "deploydir",
+      "ignoreerrors",
+      "ignorewarnings",
+      "json",
+      "loglevel",
+      "purgeondelete",
+      "runtests",
+      "singlepackage",
+      "soapdeploy",
+      "targetusername",
+      "testlevel",
+      "validateddeployrequestid",
+      "verbose",
+      "wait",
+      "zipfile"
+    ]
+  },
+  {
+    "command": "force:mdapi:beta:deploy:report",
+    "plugin": "@salesforce/plugin-source",
+    "flags": ["apiversion", "concise", "jobid", "json", "loglevel", "targetusername", "verbose", "wait"]
+  },
+  {
+    "command": "force:mdapi:beta:retrieve",
+    "plugin": "@salesforce/plugin-source",
+    "flags": [
+      "apiversion",
+      "json",
+      "loglevel",
+      "packagenames",
+      "retrievetargetdir",
+      "singlepackage",
+      "sourcedir",
+      "targetusername",
+      "unpackaged",
+      "unzip",
+      "verbose",
+      "wait",
+      "zipfilename"
+    ]
+  },
+  {
+    "command": "force:mdapi:beta:retrieve:report",
+    "plugin": "@salesforce/plugin-source",
+    "flags": [
+      "apiversion",
+      "jobid",
+      "json",
+      "loglevel",
+      "retrievetargetdir",
+      "targetusername",
+      "unzip",
+      "verbose",
+      "wait",
+      "zipfilename"
+    ]
+  },
+  {
+    "command": "force:mdapi:deploy:cancel",
+    "plugin": "@salesforce/plugin-source",
+    "flags": ["apiversion", "jobid", "json", "loglevel", "targetusername", "wait"]
+  },
+  {
+    "command": "force:mdapi:describemetadata",
+    "plugin": "@salesforce/plugin-source",
+    "flags": ["apiversion", "filterknown", "json", "loglevel", "resultfile", "targetusername"]
+  },
+  {
+    "command": "force:mdapi:listmetadata",
+    "plugin": "@salesforce/plugin-source",
+    "flags": ["apiversion", "folder", "json", "loglevel", "metadatatype", "resultfile", "targetusername"]
+  },
+  {
+    "command": "force:source:beta:pull",
+    "plugin": "@salesforce/plugin-source",
+    "flags": ["apiversion", "forceoverwrite", "json", "loglevel", "targetusername", "wait"]
+  },
+  {
+    "command": "force:source:beta:push",
+    "plugin": "@salesforce/plugin-source",
+    "flags": ["apiversion", "forceoverwrite", "ignorewarnings", "json", "loglevel", "quiet", "targetusername", "wait"]
+  },
+  {
+    "command": "force:source:beta:status",
+    "plugin": "@salesforce/plugin-source",
+    "flags": ["apiversion", "concise", "json", "local", "loglevel", "remote", "targetusername"]
+  },
+  {
+    "command": "force:source:beta:tracking:clear",
+    "plugin": "@salesforce/plugin-source",
+    "flags": ["apiversion", "json", "loglevel", "noprompt", "targetusername"]
+  },
+  {
+    "command": "force:source:beta:tracking:reset",
+    "plugin": "@salesforce/plugin-source",
+    "flags": ["apiversion", "json", "loglevel", "noprompt", "revision", "targetusername"]
+  },
+  {
     "command": "force:source:convert",
     "plugin": "@salesforce/plugin-source",
     "flags": ["json", "loglevel", "manifest", "metadata", "outputdir", "packagename", "rootdir", "sourcepath"]
@@ -33,6 +142,9 @@
       "loglevel",
       "manifest",
       "metadata",
+      "postdestructivechanges",
+      "predestructivechanges",
+      "purgeondelete",
       "runtests",
       "soapdeploy",
       "sourcepath",
@@ -52,6 +164,11 @@
     "command": "force:source:deploy:report",
     "plugin": "@salesforce/plugin-source",
     "flags": ["apiversion", "jobid", "json", "loglevel", "targetusername", "verbose", "wait"]
+  },
+  {
+    "command": "force:source:ignored:list",
+    "plugin": "@salesforce/plugin-source",
+    "flags": ["json", "loglevel", "sourcepath"]
   },
   {
     "command": "force:source:manifest:create",

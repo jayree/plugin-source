@@ -6,8 +6,9 @@
  */
 
 import { join } from 'path';
+import * as fs from 'fs';
 import * as sinon from 'sinon';
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import { fromStub, spyMethod, stubInterface, stubMethod } from '@salesforce/ts-sinon';
 import { ConfigFile, Org, SfdxProject } from '@salesforce/core';
 import { IConfig } from '@oclif/config';
@@ -18,6 +19,7 @@ import { DeployReportResultFormatter } from '../../../src/formatters/deployRepor
 import { DeployCommandResult } from '../../../src/formatters/deployResultFormatter';
 import { DeployProgressBarFormatter } from '../../../src/formatters/deployProgressBarFormatter';
 import { DeployProgressStatusFormatter } from '../../../src/formatters/deployProgressStatusFormatter';
+import { Stash } from '../../../src/stash';
 import { getDeployResult } from './deployResponses';
 
 describe('force:source:report', () => {
@@ -37,10 +39,13 @@ describe('force:source:report', () => {
   let checkDeployStatusStub: sinon.SinonStub;
   let uxLogStub: sinon.SinonStub;
   let pollStatusStub: sinon.SinonStub;
+  let readSyncStub: sinon.SinonStub;
 
   class TestReport extends Report {
     public async runIt() {
       await this.init();
+      // oclif would normally populate this, but UT don't have it
+      this.id ??= 'force:source:deploy:report';
       return this.run();
     }
     public setOrg(org: Org) {
@@ -80,19 +85,22 @@ describe('force:source:report', () => {
       cmd.setOrg(orgStub);
     });
     uxLogStub = stubMethod(sandbox, UX.prototype, 'log');
-    stubMethod(sandbox, ConfigFile.prototype, 'readSync');
     stubMethod(sandbox, ConfigFile.prototype, 'get').returns({ jobid: stashedDeployId });
     checkDeployStatusStub = sandbox.stub().resolves(expectedResults);
 
     return cmd.runIt();
   };
 
+  beforeEach(() => {
+    readSyncStub = stubMethod(sandbox, ConfigFile.prototype, 'readSync');
+  });
+
   afterEach(() => {
     sandbox.restore();
   });
 
   it('should use stashed deploy ID', async () => {
-    const getStashSpy = spyMethod(sandbox, Report.prototype, 'getStash');
+    const getStashSpy = spyMethod(sandbox, Stash, 'get');
     const result = await runReportCmd(['--json']);
     expect(result).to.deep.equal(expectedResults);
     expect(getStashSpy.called).to.equal(true);
@@ -107,8 +115,23 @@ describe('force:source:report', () => {
     expect(progressBarStub.calledOnce).to.equal(true);
   });
 
+  it('should rename corrupt stash.json and throw an error', async () => {
+    const jsonParseError = new Error();
+    jsonParseError.name = 'JsonParseError';
+    readSyncStub.throws(jsonParseError);
+    const renameSyncStub = stubMethod(sandbox, fs, 'renameSync');
+    try {
+      await runReportCmd(['--json']);
+      assert(false, 'Expected report command to throw a JsonParseError');
+    } catch (error: unknown) {
+      const err = error as Error;
+      expect(err.name).to.equal('InvalidStashFile');
+      expect(renameSyncStub.calledOnce).to.be.true;
+    }
+  });
+
   it('should use the jobid flag', async () => {
-    const getStashSpy = spyMethod(sandbox, Report.prototype, 'getStash');
+    const getStashSpy = spyMethod(sandbox, Stash, 'get');
     const result = await runReportCmd(['--json', '--jobid', expectedResults.id]);
     expect(result).to.deep.equal(expectedResults);
     expect(getStashSpy.called).to.equal(false);

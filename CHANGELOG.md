@@ -2,6 +2,147 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.8.9](https://github.com/salesforcecli/plugin-source/compare/v1.8.8...v1.8.9) (2022-02-01)
+
+### Bug Fixes
+
+- bump lots of dependencies ([#416](https://github.com/salesforcecli/plugin-source/issues/416)) ([d242a59](https://github.com/salesforcecli/plugin-source/commit/d242a595011b8da74f2b1da3afac56f6801214bb))
+
+### [1.8.8](https://github.com/salesforcecli/plugin-source/compare/v1.8.7...v1.8.8) (2022-01-31)
+
+### Bug Fixes
+
+- Add CFT/COT NUTs ([#415](https://github.com/salesforcecli/plugin-source/issues/415)) ([720e6ef](https://github.com/salesforcecli/plugin-source/commit/720e6efdddc396913c08b8e517edc66a2c804213))
+
+### [1.8.7](https://github.com/salesforcecli/plugin-source/compare/v1.8.6...v1.8.7) (2022-01-30)
+
+### Bug Fixes
+
+- make retrieve param consistent and fix tests ([#410](https://github.com/salesforcecli/plugin-source/issues/410)) ([79108d8](https://github.com/salesforcecli/plugin-source/commit/79108d87ceb65c49c5e17955c42733c6f0d8a2e6))
+
+### [1.8.6](https://github.com/salesforcecli/plugin-source/compare/v1.8.5...v1.8.6) (2022-01-27)
+
+### Bug Fixes
+
+- add purgeondelete flag to deploy ([#394](https://github.com/salesforcecli/plugin-source/issues/394)) ([6b99f44](https://github.com/salesforcecli/plugin-source/commit/6b99f44c0fdbe9f3d398a7e98dff29d00fc02c46))
+
+### [1.8.5](https://github.com/salesforcecli/plugin-source/compare/v1.8.4...v1.8.5) (2022-01-25)
+
+### [1.8.4](https://github.com/salesforcecli/plugin-source/compare/v1.8.3...v1.8.4) (2022-01-20)
+
+### [1.8.3](https://github.com/salesforcecli/plugin-source/compare/v1.8.2...v1.8.3) (2022-01-20)
+
+### [1.8.2](https://github.com/salesforcecli/plugin-source/compare/v1.8.1...v1.8.2) (2022-01-20)
+
+### Bug Fixes
+
+- include correct username for deploy:report in async deploy ([#392](https://github.com/salesforcecli/plugin-source/issues/392)) ([f58ff25](https://github.com/salesforcecli/plugin-source/commit/f58ff251c60b18391374de7a16f732540515d524))
+
+### [1.8.1](https://github.com/salesforcecli/plugin-source/compare/v1.8.0...v1.8.1) (2022-01-19)
+
+### Bug Fixes
+
+- missing quotes in --help for source:retrieve ([#393](https://github.com/salesforcecli/plugin-source/issues/393)) ([2c1e5c6](https://github.com/salesforcecli/plugin-source/commit/2c1e5c6157aed2c1d855af8f2c0a1ebf4478dc23))
+
+## [1.8.0](https://github.com/salesforcecli/plugin-source/compare/v1.6.2...v1.8.0) (2022-01-13)
+
+### Features
+
+- concise flag on status to omit ignored files ([#382](https://github.com/salesforcecli/plugin-source/issues/382)) ([2dcbac8](https://github.com/salesforcecli/plugin-source/commit/2dcbac81e57d056e82835c785bc5a5dc98a255a4))
+- mdapi deploy/report commands ([8068ff0](https://github.com/salesforcecli/plugin-source/commit/8068ff07213541a5823d5908bc831f92e89aa122))
+
+### Bug Fixes
+
+- add variable polling times based on comp. set ([#360](https://github.com/salesforcecli/plugin-source/issues/360)) ([4a839ff](https://github.com/salesforcecli/plugin-source/commit/4a839ff7f9f429a723c54baf6c9cb65139eadf43))
+- update --testlevel RunLocalTests --help to say that unlocked packages are also excluded ([#384](https://github.com/salesforcecli/plugin-source/issues/384)) ([5f0ad44](https://github.com/salesforcecli/plugin-source/commit/5f0ad449a6880d761a233c3191e3759a6c0b72cc))
+
+### [1.6.2](https://github.com/salesforcecli/plugin-source/compare/v1.6.1...v1.6.2) (2021-12-03)
+
+### Bug Fixes
+
+- bump stl for customField status and pull ([#346](https://github.com/salesforcecli/plugin-source/issues/346)) ([7a657dd](https://github.com/salesforcecli/plugin-source/commit/7a657dde6dc8ffb1222034be11bd239b294b074f))
+
+### [1.6.1](https://github.com/salesforcecli/plugin-source/compare/v1.6.0...v1.6.1) (2021-12-02)
+
+## [1.6.0](https://github.com/salesforcecli/plugin-source/compare/v1.5.5...v1.6.0) (2021-12-02)
+
+### Features
+
+- bump deps ([#339](https://github.com/salesforcecli/plugin-source/issues/339)) ([ef58621](https://github.com/salesforcecli/plugin-source/commit/ef5862195a3e5c777ab8df0d2fc5782b1d692ff0))
+
+### [1.5.5](https://github.com/salesforcecli/plugin-source/compare/v1.5.4...v1.5.5) (2021-12-01)
+
+### Bug Fixes
+
+- delete bundle component and deploy 'new' bundle ([6af9705](https://github.com/salesforcecli/plugin-source/commit/6af9705f61df6743641565eb7bfbe7d20a08c495))
+
+### [1.5.4](https://github.com/salesforcecli/plugin-source/compare/v1.5.3...v1.5.4) (2021-11-23)
+
+### Bug Fixes
+
+- conditionally include folder ([#309](https://github.com/salesforcecli/plugin-source/issues/309)) ([6a7c936](https://github.com/salesforcecli/plugin-source/commit/6a7c9366a88dc7ea332ba3db1a5658a3b0387d6e))
+
+### [1.5.3](https://github.com/salesforcecli/plugin-source/compare/v1.5.2...v1.5.3) (2021-11-18)
+
+### [1.5.2](https://github.com/salesforcecli/plugin-source/compare/v1.5.1...v1.5.2) (2021-11-18)
+
+### [1.5.1](https://github.com/salesforcecli/plugin-source/compare/v1.5.0...v1.5.1) (2021-11-18)
+
+## [1.5.0](https://github.com/salesforcecli/plugin-source/compare/v1.4.3...v1.5.0) (2021-11-16)
+
+### Features
+
+- add mdapi:deploy:cancel command, refactor base classes to support MDAPI and SOURCE stash keys ([#301](https://github.com/salesforcecli/plugin-source/issues/301)) ([9dcc3e7](https://github.com/salesforcecli/plugin-source/commit/9dcc3e7bc1be13d1dcb0df13b3f7710407f9e977))
+
+### [1.4.3](https://github.com/salesforcecli/plugin-source/compare/v1.4.2...v1.4.3) (2021-11-15)
+
+### Bug Fixes
+
+- add back missing help for listmetadata/describemetadata ([#295](https://github.com/salesforcecli/plugin-source/issues/295)) ([f641d83](https://github.com/salesforcecli/plugin-source/commit/f641d8311905d4aa68bcba4679674e4afa8868c1))
+
+### [1.4.2](https://github.com/salesforcecli/plugin-source/compare/v1.4.1...v1.4.2) (2021-11-11)
+
+### Bug Fixes
+
+- handle a corrupt stash.json file ([#291](https://github.com/salesforcecli/plugin-source/issues/291)) ([ac15a24](https://github.com/salesforcecli/plugin-source/commit/ac15a2433977bbd801fe54e70568bcf176ec0f1b))
+
+### [1.4.1](https://github.com/salesforcecli/plugin-source/compare/v1.4.0...v1.4.1) (2021-11-11)
+
+## [1.4.0](https://github.com/salesforcecli/plugin-source/compare/v1.3.1...v1.4.0) (2021-11-09)
+
+### Features
+
+- listmetadata and describemetadata ([b00a59a](https://github.com/salesforcecli/plugin-source/commit/b00a59a3c06cd81b121c306b6b9af3ee581a61ad))
+
+### [1.3.1](https://github.com/salesforcecli/plugin-source/compare/v1.3.0...v1.3.1) (2021-10-28)
+
+### Bug Fixes
+
+- bump SDR to 5.1.1 ([#266](https://github.com/salesforcecli/plugin-source/issues/266)) ([ff6a4f7](https://github.com/salesforcecli/plugin-source/commit/ff6a4f74401668faec6404f941ce5cf73da426ff))
+
+## [1.3.0](https://github.com/salesforcecli/plugin-source/compare/v1.2.6...v1.3.0) (2021-10-28)
+
+### Features
+
+- source tracking beta commands ([b871774](https://github.com/salesforcecli/plugin-source/commit/b87177498c184580db7e3bd81f164ddc77e6de0b)), closes [#253](https://github.com/salesforcecli/plugin-source/issues/253) [#251](https://github.com/salesforcecli/plugin-source/issues/251) [#230](https://github.com/salesforcecli/plugin-source/issues/230) [#260](https://github.com/salesforcecli/plugin-source/issues/260) [#259](https://github.com/salesforcecli/plugin-source/issues/259)
+
+### [1.2.6](https://github.com/salesforcecli/plugin-source/compare/v1.2.5...v1.2.6) (2021-10-21)
+
+### Bug Fixes
+
+- use cross-env for test:nuts script ([#260](https://github.com/salesforcecli/plugin-source/issues/260)) ([76627fb](https://github.com/salesforcecli/plugin-source/commit/76627fb21c62a4fb140c87ccfc266accd79af3fd))
+
+### [1.2.5](https://github.com/salesforcecli/plugin-source/compare/v1.2.4...v1.2.5) (2021-10-21)
+
+### [1.2.4](https://github.com/salesforcecli/plugin-source/compare/v1.2.3...v1.2.4) (2021-10-12)
+
+### [1.2.3](https://github.com/salesforcecli/plugin-source/compare/v1.2.1...v1.2.3) (2021-10-11)
+
+### Bug Fixes
+
+- add back missing long parameter descriptions for some force:source commands ([#241](https://github.com/salesforcecli/plugin-source/issues/241)) ([d87671b](https://github.com/salesforcecli/plugin-source/commit/d87671b4987317d395873d6ef382e6a3ca2080e5))
+- remote-only deletes now supported ([#220](https://github.com/salesforcecli/plugin-source/issues/220)) ([fed3ff4](https://github.com/salesforcecli/plugin-source/commit/fed3ff496e732c6b960ae5838ea302e6b51e9029))
+
 ### [1.2.1](https://github.com/salesforcecli/plugin-source/compare/v1.2.0...v1.2.1) (2021-10-05)
 
 ### Bug Fixes

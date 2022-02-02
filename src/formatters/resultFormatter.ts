@@ -8,12 +8,15 @@
 import * as path from 'path';
 import { UX } from '@salesforce/command';
 import { Logger } from '@salesforce/core';
-import { FileResponse, Failures, Successes } from '@salesforce/source-deploy-retrieve';
-import { getBoolean, getNumber } from '@salesforce/ts-types';
+import { Failures, FileProperties, FileResponse, Successes } from '@salesforce/source-deploy-retrieve';
+import { getNumber } from '@salesforce/ts-types';
 
 export interface ResultFormatterOptions {
   verbose?: boolean;
+  quiet?: boolean;
   waitTime?: number;
+  concise?: boolean;
+  username?: string;
 }
 
 export function toArray<T>(entryOrArray: T | T[] | undefined): T[] {
@@ -37,11 +40,19 @@ export abstract class ResultFormatter {
   // Command success is determined by the command so it can set the
   // exit code on the process, which is done before formatting.
   public isSuccess(): boolean {
-    return getNumber(process, 'exitCode', 0) === 0;
+    return [0, 69].includes(getNumber(process, 'exitCode', 0));
   }
 
   public isVerbose(): boolean {
-    return getBoolean(this.options, 'verbose', false);
+    return this.options.verbose ?? false;
+  }
+
+  public isQuiet(): boolean {
+    return this.options.quiet ?? false;
+  }
+
+  public isConcise(): boolean {
+    return this.options.concise ?? false;
   }
 
   // Sort by type > filePath > fullName
@@ -52,6 +63,19 @@ export abstract class ResultFormatter {
           return i.fullName > j.fullName ? 1 : -1;
         }
         return i.filePath > j.filePath ? 1 : -1;
+      }
+      return i.type > j.type ? 1 : -1;
+    });
+  }
+
+  // Sort by type > fileName > fullName
+  protected sortFileProperties(fileProperties: FileProperties[]): void {
+    fileProperties.sort((i, j) => {
+      if (i.type === j.type) {
+        if (i.fileName === j.fileName) {
+          return i.fullName > j.fullName ? 1 : -1;
+        }
+        return i.fileName > j.fileName ? 1 : -1;
       }
       return i.type > j.type ? 1 : -1;
     });

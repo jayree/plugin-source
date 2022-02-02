@@ -7,14 +7,14 @@
 import * as os from 'os';
 import { flags, FlagsConfig } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
-import { AsyncResult, DeployResult, RequestStatus } from '@salesforce/source-deploy-retrieve';
-import { Duration } from '@salesforce/kit';
-import { getString, isString } from '@salesforce/ts-types';
-import { env, once } from '@salesforce/kit';
-import { DeployCommand } from '../../../deployCommand';
+import { Duration, env } from '@salesforce/kit';
+import { DeployCommand, getVersionMessage, TestLevel } from '../../../deployCommand';
 import { ComponentSetBuilder } from '../../../componentSetBuilder';
-import { DeployResultFormatter, DeployCommandResult } from '../../../formatters/deployResultFormatter';
-import { DeployAsyncResultFormatter, DeployCommandAsyncResult } from '../../../formatters/deployAsyncResultFormatter';
+import { DeployCommandResult, DeployResultFormatter } from '../../../formatters/deployResultFormatter';
+import {
+  DeployAsyncResultFormatter,
+  DeployCommandAsyncResult,
+} from '../../../formatters/source/deployAsyncResultFormatter';
 import { ProgressFormatter } from '../../../formatters/progressFormatter';
 import { DeployProgressBarFormatter } from '../../../formatters/deployProgressBarFormatter';
 import { DeployProgressStatusFormatter } from '../../../formatters/deployProgressStatusFormatter';
@@ -23,8 +23,7 @@ Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-source', 'deploy');
 
 // One of these flags must be specified for a valid deploy.
-
-type TestLevel = 'NoTestRun' | 'RunSpecifiedTests' | 'RunLocalTests' | 'RunAllTestsInOrg';
+const xorFlags = ['manifest', 'metadata', 'sourcepath', 'validateddeployrequestid'];
 
 export class Deploy extends DeployCommand {
   public static readonly description = messages.getMessage('description');
@@ -43,7 +42,7 @@ export class Deploy extends DeployCommand {
     }),
     wait: flags.minutes({
       char: 'w',
-      default: Duration.minutes(Deploy.DEFAULT_SRC_WAIT_MINUTES),
+      default: Duration.minutes(Deploy.DEFAULT_WAIT_MINUTES),
       min: Duration.minutes(0), // wait=0 means deploy is asynchronous
       description: messages.getMessage('flags.wait'),
       longDescription: messages.getMessage('flagsLong.wait'),
@@ -71,20 +70,17 @@ export class Deploy extends DeployCommand {
       description: messages.getMessage('flags.ignoreWarnings'),
       longDescription: messages.getMessage('flagsLong.ignoreWarnings'),
     }),
+    purgeondelete: flags.boolean({
+      description: messages.getMessage('flags.purgeOnDelete'),
+      dependsOn: ['manifest'],
+    }),
     validateddeployrequestid: flags.id({
       char: 'q',
       description: messages.getMessage('flags.validateDeployRequestId'),
       longDescription: messages.getMessage('flagsLong.validateDeployRequestId'),
-      exclusive: [
-        'manifest',
-        'metadata',
-        'sourcepath',
-        'checkonly',
-        'testlevel',
-        'runtests',
-        'ignoreerrors',
-        'ignorewarnings',
-      ],
+      exactlyOne: xorFlags,
+      exclusive: ['checkonly', 'testlevel', 'runtests', 'ignoreerrors', 'ignorewarnings'],
+      validate: DeployCommand.isValidDeployId,
     }),
     verbose: flags.builtin({
       description: messages.getMessage('flags.verbose'),
@@ -93,32 +89,30 @@ export class Deploy extends DeployCommand {
       char: 'm',
       description: messages.getMessage('flags.metadata'),
       longDescription: messages.getMessage('flagsLong.metadata'),
-      exclusive: ['manifest', 'sourcepath'],
+      exactlyOne: xorFlags,
     }),
     sourcepath: flags.array({
       char: 'p',
       description: messages.getMessage('flags.sourcePath'),
       longDescription: messages.getMessage('flagsLong.sourcePath'),
-      exclusive: ['manifest', 'metadata'],
+      exactlyOne: xorFlags,
     }),
     manifest: flags.filepath({
       char: 'x',
       description: messages.getMessage('flags.manifest'),
       longDescription: messages.getMessage('flagsLong.manifest'),
-      exclusive: ['metadata', 'sourcepath'],
+      exactlyOne: xorFlags,
+    }),
+    predestructivechanges: flags.filepath({
+      description: messages.getMessage('flags.predestructivechanges'),
+      dependsOn: ['manifest'],
+    }),
+    postdestructivechanges: flags.filepath({
+      description: messages.getMessage('flags.postdestructivechanges'),
+      dependsOn: ['manifest'],
     }),
   };
-  protected xorFlags = ['manifest', 'metadata', 'sourcepath', 'validateddeployrequestid'];
   protected readonly lifecycleEventNames = ['predeploy', 'postdeploy'];
-
-  private isAsync = false;
-  private isRest = false;
-  private asyncDeployResult: AsyncResult;
-
-  private updateDeployId = once((id) => {
-    this.displayDeployId(id);
-    this.setStash(id);
-  });
 
   public async run(): Promise<DeployCommandResult | DeployCommandAsyncResult> {
     await this.deploy();
@@ -131,13 +125,9 @@ export class Deploy extends DeployCommand {
   //   2. asynchronous - deploy metadata and immediately return.
   //   3. recent validation - deploy metadata that's already been validated by the org
   protected async deploy(): Promise<void> {
-    // verify that the user defined one of: manifest, metadata, sourcepath, validateddeployrequestid
-    this.validateFlags();
-
     const waitDuration = this.getFlag<Duration>('wait');
     this.isAsync = waitDuration.quantity === 0;
     this.isRest = await this.isRestDeploy();
-    this.ux.log(`*** Deploying with ${this.isRest ? 'REST' : 'SOAP'} API ***`);
 
     if (this.flags.validateddeployrequestid) {
       this.deployResult = await this.deployRecentValidation();
@@ -149,6 +139,8 @@ export class Deploy extends DeployCommand {
         manifest: this.flags.manifest && {
           manifestPath: this.getFlag<string>('manifest'),
           directoryPaths: this.getPackageDirs(),
+          destructiveChangesPre: this.getFlag<string>('predestructivechanges'),
+          destructiveChangesPost: this.getFlag<string>('postdestructivechanges'),
         },
         metadata: this.flags.metadata && {
           metadataEntries: this.getFlag<string[]>('metadata'),
@@ -157,10 +149,12 @@ export class Deploy extends DeployCommand {
       });
       // fire predeploy event for sync and async deploys
       await this.lifecycle.emit('predeploy', this.componentSet.toArray());
+      this.ux.log(getVersionMessage('Deploying', this.componentSet, this.isRest));
 
       const deploy = await this.componentSet.deploy({
         usernameOrConnection: this.org.getUsername(),
         apiOptions: {
+          purgeOnDelete: this.getFlag<boolean>('purgeondelete', false),
           ignoreWarnings: this.getFlag<boolean>('ignorewarnings', false),
           rollbackOnError: !this.getFlag<boolean>('ignoreerrors', false),
           checkOnly: this.getFlag<boolean>('checkonly', false),
@@ -180,7 +174,7 @@ export class Deploy extends DeployCommand {
             : new DeployProgressStatusFormatter(this.logger, this.ux);
           progressFormatter.progress(deploy);
         }
-        this.deployResult = await deploy.pollStatus(500, waitDuration.seconds);
+        this.deployResult = await deploy.pollStatus({ timeout: waitDuration });
       }
     }
 
@@ -190,31 +184,15 @@ export class Deploy extends DeployCommand {
     }
   }
 
-  /**
-   * Checks the response status to determine whether the deploy was successful.
-   * Async deploys are successful unless an error is thrown, which resolves as
-   * unsuccessful in oclif.
-   */
-  protected resolveSuccess(): void {
-    if (!this.isAsync) {
-      const status = getString(this.deployResult, 'response.status');
-      if (status !== RequestStatus.Succeeded) {
-        this.setExitCode(1);
-      }
-    }
-  }
-
   protected formatResult(): DeployCommandResult | DeployCommandAsyncResult {
     const formatterOptions = {
       verbose: this.getFlag<boolean>('verbose', false),
+      username: this.org.getUsername(),
     };
 
-    let formatter: DeployAsyncResultFormatter | DeployResultFormatter;
-    if (this.isAsync) {
-      formatter = new DeployAsyncResultFormatter(this.logger, this.ux, formatterOptions, this.asyncDeployResult);
-    } else {
-      formatter = new DeployResultFormatter(this.logger, this.ux, formatterOptions, this.deployResult);
-    }
+    const formatter = this.isAsync
+      ? new DeployAsyncResultFormatter(this.logger, this.ux, formatterOptions, this.asyncDeployResult)
+      : new DeployResultFormatter(this.logger, this.ux, formatterOptions, this.deployResult);
 
     // Only display results to console when JSON flag is unset.
     if (!this.isJsonOutput()) {
@@ -222,26 +200,5 @@ export class Deploy extends DeployCommand {
     }
 
     return formatter.getJson();
-  }
-
-  private async deployRecentValidation(): Promise<DeployResult> {
-    const conn = this.org.getConnection();
-    const id = this.getFlag<string>('validateddeployrequestid');
-
-    const response = await conn.deployRecentValidation({ id, rest: this.isRest });
-
-    // This is the deploy ID of the deployRecentValidation response, not
-    // the already validated deploy ID (i.e., validateddeployrequestid).
-    let validatedDeployId: string;
-    if (isString(response)) {
-      // SOAP API
-      validatedDeployId = response;
-    } else {
-      // REST API
-      validatedDeployId = (response as { id: string }).id;
-    }
-    this.updateDeployId(validatedDeployId);
-
-    return this.isAsync ? this.report(validatedDeployId) : this.poll(validatedDeployId);
   }
 }

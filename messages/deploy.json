@@ -1,5 +1,5 @@
 {
-  "description": "deploy source to an org\nUse this command to deploy source (metadata that’s in source format) to an org.\nTo take advantage of change tracking with scratch orgs, use \"sfdx force:source:push\".\nTo deploy metadata that’s in metadata format, use \"sfdx force:mdapi:deploy\".\n\nThe source you deploy overwrites the corresponding metadata in your org. This command does not attempt to merge your source with the versions in your org.\n\nTo run the command asynchronously, set --wait to 0, which immediately returns the job ID. This way, you can continue to use the CLI.\nTo check the status of the job, use force:source:deploy:report.\n\nIf the comma-separated list you’re supplying contains spaces, enclose the entire comma-separated list in one set of double quotes. On Windows, if the list contains commas, also enclose the entire list in one set of double quotes.\n",
+  "description": "deploy source to an org\nIMPORTANT: Where possible, we changed noninclusive terms to align with our company value of Equality. We maintained certain terms to avoid any effect on customer implementations.\n\nUse this command to deploy source (metadata that’s in source format) to an org.\nTo take advantage of change tracking with scratch orgs, use \"sfdx force:source:push\".\nTo deploy metadata that’s in metadata format, use \"sfdx force:mdapi:deploy\".\n\nThe source you deploy overwrites the corresponding metadata in your org. This command does not attempt to merge your source with the versions in your org.\n\nTo run the command asynchronously, set --wait to 0, which immediately returns the job ID. This way, you can continue to use the CLI.\nTo check the status of the job, use force:source:deploy:report.\n\nIf the comma-separated list you’re supplying contains spaces, enclose the entire comma-separated list in one set of double quotes. On Windows, if the list contains commas, also enclose the entire list in one set of double quotes.\n If you use the --manifest, --predestructivechanges, or --postdestructivechanges parameters, run the force:source:manifest:create command to easily generate the different types of manifest files.",
   "examples": [
     "To deploy the source files in a directory:\n\t $ sfdx force:source:deploy -p path/to/source",
     "To deploy a specific Apex class and the objects whose source is in a directory: \n\t$ sfdx force:source:deploy -p \"path/to/apex/classes/MyClass.cls,path/to/source/objects\"",
@@ -11,7 +11,9 @@
     "To deploy all components listed in a manifest:\n   $ sfdx force:source:deploy -x path/to/package.xml",
     "To run the tests that aren’t in any managed packages as part of a deployment:\n   $ sfdx force:source:deploy -m ApexClass -l RunLocalTests",
     "To check whether a deployment would succeed (to prepare for Quick Deploy):\n   $ sfdx force:source:deploy -m ApexClass -l RunAllTestsInOrg -c",
-    "To deploy an already validated deployment (Quick Deploy):\n    $ sfdx force:source:deploy -q 0Af9A00000FTM6pSAH`,"
+    "To deploy an already validated deployment (Quick Deploy):\n    $ sfdx force:source:deploy -q 0Af9A00000FTM6pSAH`",
+    "To run a destructive operation before the deploy occurs:\n    $ sfdx force:source:deploy --manifest package.xml --predestructivechanges destructiveChangesPre.xml",
+    "To run a destructive operation after the deploy occurs:\n    $ sfdx force:source:deploy --manifest package.xml --postdestructivechanges destructiveChangesPost.xml"
   ],
   "flags": {
     "sourcePath": "comma-separated list of source file paths to deploy",
@@ -25,7 +27,10 @@
     "ignoreErrors": "ignore any errors and do not roll back deployment",
     "ignoreWarnings": "whether a warning will allow a deployment to complete successfully",
     "validateDeployRequestId": "deploy request ID of the validated deployment to run a Quick Deploy",
-    "soapDeploy": "deploy metadata with SOAP API instead of REST API"
+    "soapDeploy": "deploy metadata with SOAP API instead of REST API",
+    "predestructivechanges": "file path for a manifest (destructiveChangesPre.xml) of components to delete before the deploy",
+    "postdestructivechanges": "file path for a manifest (destructiveChangesPost.xml) of components to delete after the deploy",
+    "purgeOnDelete": "specify that deleted components in the destructive changes manifest file are immediately eligible for deletion rather than being stored in the Recycle Bin"
   },
   "flagsLong": {
     "sourcePath": [
@@ -53,7 +58,7 @@
       "Specifies which level of deployment tests to run. Valid values are:",
       "  NoTestRun—No tests are run. This test level applies only to deployments to development environments, such as sandbox, Developer Edition, or trial orgs. This test level is the default for development environments.",
       "  RunSpecifiedTests—Runs only the tests that you specify in the --runtests option. Code coverage requirements differ from the default coverage requirements when using this test level. Executed tests must comprise a minimum of 75% code coverage for each class and trigger in the deployment package. This coverage is computed for each class and trigger individually and is different than the overall coverage percentage.",
-      "  RunLocalTests—All tests in your org are run, except the ones that originate from installed managed packages. This test level is the default for production deployments that include Apex classes or triggers.",
+      "  RunLocalTests—All tests in your org are run, except the ones that originate from installed managed and unlocked packages. This test level is the default for production deployments that include Apex classes or triggers.",
       "  RunAllTestsInOrg—All tests in your org are run, including tests of managed packages.",
       "If you don’t specify a test level, the default behavior depends on the contents of your deployment package. For more information, see “Running Tests in a Deployment” in the Metadata API Developer Guide."
     ],
@@ -69,12 +74,12 @@
       "    - If specific tests are run with the RunSpecifiedTests test level, each class and trigger that was deployed is covered by at least 75% individually."
     ]
   },
-  "MissingRequiredParam": "Missing one of the following parameters: %s",
   "checkOnlySuccess": "Successfully validated the deployment. %s components deployed and %s tests run.\nUse the --verbose parameter to see detailed output.",
-  "MissingDeployId": "No deploy ID was provided or found in deploy history",
-  "deployCanceled": "The deployment has been canceled by %s",
+  "MissingDeployId": "No deploy ID was provided or found in deploy history.",
+  "deployCanceled": "The deployment has been canceled by %s.",
   "deployFailed": "Deploy failed.",
   "asyncDeployQueued": "Deploy has been queued.",
-  "asyncDeployCancel": "Run sfdx force:source:deploy:cancel -i %s to cancel the deploy.",
-  "asyncDeployReport": "Run sfdx force:source:deploy:report -i %s to get the latest status."
+  "asyncDeployCancel": "Run sfdx force:source:deploy:cancel -i %s -u %s to cancel the deploy.",
+  "asyncDeployReport": "Run sfdx force:source:deploy:report -i %s -u %s to get the latest status.",
+  "invalidDeployId": "The provided ID is invalid, deploy IDs must start with '0Af'."
 }

@@ -12,12 +12,14 @@ import { fromStub, spyMethod, stubInterface, stubMethod } from '@salesforce/ts-s
 import { ConfigFile, Org, SfdxProject } from '@salesforce/core';
 import { IConfig } from '@oclif/config';
 import { UX } from '@salesforce/command';
+import { MetadataApiDeploy } from '@salesforce/source-deploy-retrieve';
 import { Cancel } from '../../../src/commands/force/source/deploy/cancel';
 import { DeployCancelResultFormatter } from '../../../src/formatters/deployCancelResultFormatter';
 import { DeployCommandResult } from '../../../src/formatters/deployResultFormatter';
+import { Stash } from '../../../src/stash';
 import { getDeployResult } from './deployResponses';
 
-describe('force:source:cancel', () => {
+describe('force:source:deploy:cancel', () => {
   const sandbox = sinon.createSandbox();
   const username = 'cancel-test@org.com';
   const defaultDir = join('my', 'default', 'package');
@@ -32,12 +34,14 @@ describe('force:source:cancel', () => {
   // Stubs
   const oclifConfigStub = fromStub(stubInterface<IConfig>(sandbox));
   let checkDeployStatusStub: sinon.SinonStub;
-  let invokeStub: sinon.SinonStub;
+  let cancelStub: sinon.SinonStub;
   let uxLogStub: sinon.SinonStub;
 
   class TestCancel extends Cancel {
     public async runIt() {
       await this.init();
+      // oclif would normally populate this, but UT don't have it
+      this.id ??= 'force:source:deploy:cancel';
       return this.run();
     }
     public setOrg(org: Org) {
@@ -45,6 +49,11 @@ describe('force:source:cancel', () => {
     }
     public setProject(project: SfdxProject) {
       this.project = project;
+    }
+
+    public createDeploy(): MetadataApiDeploy {
+      cancelStub = sandbox.stub(MetadataApiDeploy.prototype, 'cancel');
+      return MetadataApiDeploy.prototype;
     }
   }
 
@@ -65,8 +74,6 @@ describe('force:source:cancel', () => {
           getConnection: () => ({
             metadata: {
               checkDeployStatus: checkDeployStatusStub,
-              // TODO: FIX FOR SDR CHANGES WHEN THEY ARE PUBLISHED
-              _invoke: invokeStub,
             },
           }),
         })
@@ -77,7 +84,6 @@ describe('force:source:cancel', () => {
     stubMethod(sandbox, ConfigFile.prototype, 'readSync');
     stubMethod(sandbox, ConfigFile.prototype, 'get').returns({ jobid: stashedDeployId });
     checkDeployStatusStub = sandbox.stub().resolves(expectedResults);
-    invokeStub = sandbox.stub().resolves();
 
     return cmd.runIt();
   };
@@ -87,12 +93,12 @@ describe('force:source:cancel', () => {
   });
 
   it('should use stashed deploy ID', async () => {
-    const getStashSpy = spyMethod(sandbox, Cancel.prototype, 'getStash');
+    const getStashSpy = spyMethod(sandbox, Stash, 'get');
     const result = await runCancelCmd(['--json']);
     expect(result).to.deep.equal(expectedResults);
     expect(getStashSpy.called).to.equal(true);
     expect(checkDeployStatusStub.firstCall.args[0]).to.equal(stashedDeployId);
-    expect(invokeStub.firstCall.args[1]).to.deep.equal({ deployId: stashedDeployId });
+    expect(cancelStub.calledOnce).to.equal(true);
   });
 
   it('should display stashed deploy ID', async () => {
@@ -102,12 +108,12 @@ describe('force:source:cancel', () => {
   });
 
   it('should use the jobid flag', async () => {
-    const getStashSpy = spyMethod(sandbox, Cancel.prototype, 'getStash');
+    const getStashSpy = spyMethod(sandbox, Stash, 'get');
     const result = await runCancelCmd(['--json', '--jobid', expectedResults.id]);
     expect(result).to.deep.equal(expectedResults);
     expect(getStashSpy.called).to.equal(false);
     expect(checkDeployStatusStub.firstCall.args[0]).to.equal(expectedResults.id);
-    expect(invokeStub.firstCall.args[1]).to.deep.equal({ deployId: expectedResults.id });
+    expect(cancelStub.calledOnce).to.equal(true);
   });
 
   it('should display the jobid flag', async () => {
